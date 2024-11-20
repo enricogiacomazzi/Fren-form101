@@ -1,5 +1,7 @@
 import { useRef, useState, useId } from "react";
+import {useForm} from 'react-hook-form';
 import clsx from "clsx";
+import { FormInput } from "./components/FormInput";
 
 const validation = {
   firstname: val => val.length > 0,
@@ -7,70 +9,76 @@ const validation = {
   email: val => val.indexOf('@') >= 0
 }
 
+
+// const App = () => {
+//   const {register, handleSubmit, formState} = useForm();
+
+//   const validSubmit = (aaa) => {
+//     console.log('submitted');
+//   }
+
+//   const invalidSubmit = (aaa) => {
+//     console.log('ma no cazzo!');
+//   }
+
+//   console.log(formState.errors);
+
+//   // validate: {topolino: myValidator}
+
+//   const myValidator = v => {
+//     return v.includes('ciao');
+//   }
+
+//   return (
+//     <form onSubmit={handleSubmit(validSubmit, invalidSubmit)}>
+//       <input {...register("giancarlo", {validate: {topolino: myValidator}})}  />
+//       <input type="submit" value="Salva"/>
+//     </form>
+//   )
+// }
+
 const App = () => {
-  const [state, setState] = useState({
-    firstname: '',
-    lastname: '',
-    email: ''
-  });
+  const {register, handleSubmit, formState: {isDirty, errors, isValid}} = useForm({mode: 'all'});
 
-  const [valid, setValid] = useState({
-    firstname: false,
-    lastname: false,
-    email: false
-  });
-
-  const [dirty, setDirty] = useState({
-    firstname: false,
-    lastname: false,
-    email: false
-  });
-
-  const firstnameId = useId();
-  const lastnameId = useId();
-  const emailId = useId();
-
-
-  const hadleClick = () => {
-    if(Object.values(valid).every(x => x)) {
-      alert(`ciao ${JSON.stringify(state)}`);
-    }
-    else {
-      setDirty({
-        firstname: true,
-        lastname: true,
-        email: true
-      });
-    }
+  const firstnameErrorMessages = {
+    required: 'Il campo nome è obbligatorio',
+    minLength: 'Il campo nome deve essere maggiore di 3 caratteri'
   }
 
-  const changeHandler = (e) => {
-    const {name, value} = e.currentTarget;
-    setState({...state, [name]: value});
-    setValid({...valid, [name]: validation[name](value)});
-    setDirty({...dirty, [name]: true});
-  } 
+  const lastnameErrorMessages = {
+    required: 'Il campo cognome è obbligatorio',
+    minLength: 'Il campo cognome deve essere maggiore di 5 caratteri'
+  }
 
-  console.log(state);
+  const validSub = data => {
+    alert(JSON.stringify(data));
+  }
+
+
+  console.log(isDirty, errors);
 
   return (
-    <form>
-      <div className="form-group">
-        <label htmlFor={firstnameId}>Firstname</label>
-        <input 
-          name="firstname"
-          value={state.firstname} 
-          onChange={changeHandler} 
-          type="text" 
-          className={clsx('form-control', {'is-invalid': dirty.firstname && !valid.firstname, 'is-valid': dirty.firstname && valid.firstname})} 
-          id={firstnameId}
-          placeholder="firstname" />
-          <div className={clsx('invalid-feedback', {'hide': !(dirty.firstname && !valid.firstname)})}>
-            Il nome deve essere maggiore di 3 caratteri
-          </div>
-      </div>
+    <form onSubmit={handleSubmit(validSub)}>
+      <FormInput 
+        title="Firstname" 
+        registerRes={register('firstname', {required: true, minLength: 3})} 
+        isDirty={isDirty || true}
+        errors={errors}
+        errorMessages={firstnameErrorMessages}
+      />
 
-      <div className="form-group">
+      <FormInput 
+        title="Lastname" 
+        registerRes={register('lastname', {required: true, minLength: 5})} 
+        isDirty={isDirty}
+        errors={errors}
+        errorMessages={lastnameErrorMessages}
+      />
+ 
+ 
+
+
+      {/* <div className="form-group">
         <label htmlFor={lastnameId}>Lastname</label>
         <input 
           name="lastname"
@@ -96,10 +104,13 @@ const App = () => {
             <div className={clsx('invalid-feedback', {'hide': !(dirty.email && !valid.email)})}>
               La mail deve essere maggiore di 3 caratteri
             </div>
-      </div>
-      <button onClick={hadleClick} type="button" className="btn btn-primary">
-        Send
-      </button>
+      </div> */}
+      <input 
+        type="submit" 
+        className={clsx('btn', {'btn-primary': isValid, 'btn-danger': !isValid})} 
+        value="Send" 
+        disabled={!isValid} 
+      />
     </form>
   )
 }
